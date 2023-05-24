@@ -29,10 +29,7 @@ def update1():
     risk_level = request.args.get('risk_level', '')
 
     if not location_name or not risk_level:
-        return ('''
-            update the risk level of a location!
-            Please go to /update1?location_name={location_name}&risk_level={risk_level}
-            ''')
+        return render_template('form.html', t1 = 'location_name', t2 = 'risk_level')
     if risk_level != 'low' and risk_level != 'medium' and risk_level != 'high':
         return 'the risk level of a location must be low, medium or high'
     cnx = mysql.connector.connect(**config)
@@ -52,14 +49,28 @@ def update1():
     cnx.close()
     return 'insert into location (?, %s, %s) successfully' % (location_name, risk_level)
 
+@app.route('/update2') #add a new test site
+def update2():
+    test_site_name = request.args.get('test_site_name', '')
+    if not test_site_name:
+        return render_template('form.html', t1 = 'test_site_name')
+    cnx = mysql.connector.connect(**config)
+    cursor = cnx.cursor()
+    insertion = ('''
+        INSERT INTO `testing sites`(test_site_number, test_site_name) VALUES
+        (0, %s);
+        ''')
+    cursor.execute(insertion, (test_site_name,))
+    cnx.commit()
+    cursor.close()
+    cnx.close()
+    return 'insert into testing sites (?, %s) successfully' % (test_site_name,)
+
 @app.route('/query1') #query the risk level of a location
 def query1():
     location_name = request.args.get('location_name', '')
     if not location_name:
-        return ('''
-            query the risk level of a location!
-            Please go to /query1?location_name={location_name}
-            ''')
+        return render_template('form.html', t1 = 'location_name')
     cnx = mysql.connector.connect(**config)
     cursor = cnx.cursor()
     query = ('''

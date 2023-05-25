@@ -18,9 +18,14 @@ config = {
 @app.route('/') #index page
 def index():
     return ('''
-    This is index page.
-    If you want to query the risk level of a location, go to /query1
-    If you want to update the risk level of a location, go to /update1
+    <h1>Welcome to the anti-epidemic system! </h1>
+    <a href="/query1"> query the risk level of a location </a>
+    <br>
+    <a href="/update1"> update the risk level of a location </a>
+    <br>
+    <a href="/update2"> add a new test site </a>
+    <br>
+    <a href="/update3"> delete a test site </a>
     ''')
 
 @app.route('/update1') #update the risk level of a location
@@ -65,6 +70,23 @@ def update2():
     cursor.close()
     cnx.close()
     return 'insert into testing sites (?, %s) successfully' % (test_site_name,)
+
+@app.route('/update3') #delete a test site
+def update3():
+    test_site_name = request.args.get('test_site_name', '')
+    if not test_site_name:
+        return render_template('form.html', t1 = 'test_site_name')
+    cnx = mysql.connector.connect(**config)
+    cursor = cnx.cursor()
+    deletion = ('''
+        DELETE FROM `testing sites`
+        WHERE test_site_name = %s
+        ''')
+    cursor.execute(deletion, (test_site_name,))
+    cnx.commit()
+    cursor.close()
+    cnx.close()
+    return 'delete from testing sites (?, %s) successfully' % (test_site_name,)
 
 @app.route('/query1') #query the risk level of a location
 def query1():

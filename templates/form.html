@@ -15,7 +15,15 @@
 {% else %}
   
 {% endif %}
+
+{% if t3 %}
+  {{t3}}:
+  <input type='text' name={{t3}} >
+{% else %}
+  
+{% endif %}
 <input type="submit" value="Submit">
+{{ 'If there is none, fill in NULL'}}
 </form>
 </body>
 </html>

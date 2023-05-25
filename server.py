@@ -26,6 +26,8 @@ def index():
     <a href="/update2"> add a new test site </a>
     <br>
     <a href="/update3"> delete a test site </a>
+    <br>
+    <a href="/update4"> add a person </a>
     ''')
 
 @app.route('/update1') #update the risk level of a location
@@ -87,6 +89,59 @@ def update3():
     cursor.close()
     cnx.close()
     return 'delete from testing sites (?, %s) successfully' % (test_site_name,)
+
+@app.route('/update4') #add a person
+def update4():
+    ID_number = request.args.get('ID_number', '')
+    person_name = request.args.get('person_name', '')
+    advisor_name = request.args.get('advisor_name', '')
+    if not ID_number.isdigit() or not person_name:
+        return render_template('form.html', t1 = 'ID_number', t2 = 'person_name', t3 = 'advisor_name')
+    ID_number = int(ID_number)
+
+    cnx = mysql.connector.connect(**config)
+    cursor = cnx.cursor()
+    ret = None
+    query = ('''
+        SELECT COUNT(*) FROM person
+        WHERE ID_number = %s
+        ''')
+    cursor.execute(query, (ID_number,))
+    for x, in cursor:
+        if x > 0:
+            ret = 'person with this ID_number already exists!!!'
+    if advisor_name != 'NULL':
+        query = ('''
+            SELECT ID_number FROM person
+            WHERE person_name = %s
+            ''')
+        cursor.execute(query, (advisor_name,))
+        advisor = None
+        for x, in cursor:
+            advisor = x
+        if advisor is None:
+            ret = 'cannot find this advisor!!!'
+    if ret:
+        cursor.close()
+        cnx.close()
+        return ret
+    
+    if advisor_name != 'NULL':
+        insertion = ('''
+            INSERT INTO person(ID_number, person_name, advisor) VALUES
+            (%s, %s, %s);
+            ''')
+        cursor.execute(insertion, (ID_number, person_name, advisor))
+    else:
+        insertion = ('''
+            INSERT INTO person(ID_number, person_name, advisor) VALUES
+            (%s, %s, NULL);
+            ''')
+        cursor.execute(insertion, (ID_number, person_name))
+    cnx.commit()
+    cursor.close()
+    cnx.close()
+    return 'insert into person (%s, %s, ?) successfully' % (ID_number, person_name)
 
 @app.route('/query1') #query the risk level of a location
 def query1():

@@ -68,6 +68,8 @@ def index():
     <a href="/update6"> add a test record </a>
     <br>
     <a href="/query1"> query the risk level of a location </a>
+    <br>
+    <a href="/query2"> query the locations a person has been to between date A and date B </a>
     ''')
 
 @app.route('/update1') #add/update a location (and its risk level)
@@ -212,3 +214,23 @@ def query1():
     for risk_level, in cursor:
         return 'The risk level of {} is {}'.format(location_name, risk_level)
     return 'The queried location cannot be found!!!'
+
+@app.route('/query2') #query the locations a person has been to between date A and date B
+def query2():
+    person_name = request.args.get('person_name', '')
+    dateA = request.args.get('dateA', '')
+    dateB = request.args.get('dateB', '')
+    if not person_name or not dateA or not dateB:
+        return render_template('form.html', t1 = 'person_name', t2 = 'dateA', t3 = 'dateB')
+    ID_number = person_name2ID_number(person_name)
+    query = ('''
+        SELECT DISTINCT B.location_name FROM `travel record` as A, location as B
+        WHERE (A.travel_date BETWEEN %s and %s) and A.travel_location = B.location_number and A.traveler = %s
+        ''')
+    cursor.execute(query, (dateA, dateB, ID_number,))
+    ret = ''
+    for location_name, in cursor:
+        ret += location_name + '\n<br>\n'
+    if not ret:
+        return 'None'
+    return ret

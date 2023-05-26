@@ -14,23 +14,50 @@ config = {
   'database': 'anti-epidemic db'
 }
 
+cnx = mysql.connector.connect(**config)
+cursor = cnx.cursor()
+
+
+def person_name2ID_number(person_name):
+    query = ('''
+        SELECT ID_number FROM person
+        WHERE person_name = %s
+        ''')
+    cursor.execute(query, (person_name,))
+    ID_number = None
+    for x, in cursor:
+        ID_number = x
+    return ID_number
+
+def location_name2location_number(location_name):
+    query = ('''
+        SELECT location_number FROM location
+        WHERE location_name = %s
+        ''')
+    cursor.execute(query, (location_name,))
+    ID_number = None
+    for x, in cursor:
+        ID_number = x
+    return ID_number
 
 @app.route('/') #index page
 def index():
     return ('''
     <h1>Welcome to the anti-epidemic system! </h1>
-    <a href="/query1"> query the risk level of a location </a>
-    <br>
-    <a href="/update1"> update the risk level of a location </a>
+    <a href="/update1"> add/update a location (and its risk level)</a>
     <br>
     <a href="/update2"> add a new test site </a>
     <br>
     <a href="/update3"> delete a test site </a>
     <br>
     <a href="/update4"> add a person </a>
+    <br>
+    <a href="/update5"> add a travel record </a>
+    <br>
+    <a href="/query1"> query the risk level of a location </a>
     ''')
 
-@app.route('/update1') #update the risk level of a location
+@app.route('/update1') #add/update a location (and its risk level)
 def update1():
     location_name = request.args.get('location_name', '')
     risk_level = request.args.get('risk_level', '')
@@ -39,8 +66,6 @@ def update1():
         return render_template('form.html', t1 = 'location_name', t2 = 'risk_level')
     if risk_level != 'low' and risk_level != 'medium' and risk_level != 'high':
         return 'the risk level of a location must be low, medium or high'
-    cnx = mysql.connector.connect(**config)
-    cursor = cnx.cursor()
     deletion = ('''
         DELETE FROM location
         WHERE location_name = %s
@@ -52,8 +77,6 @@ def update1():
         ''')
     cursor.execute(insertion, (location_name, risk_level))
     cnx.commit()
-    cursor.close()
-    cnx.close()
     return 'insert into location (?, %s, %s) successfully' % (location_name, risk_level)
 
 @app.route('/update2') #add a new test site
@@ -61,16 +84,12 @@ def update2():
     test_site_name = request.args.get('test_site_name', '')
     if not test_site_name:
         return render_template('form.html', t1 = 'test_site_name')
-    cnx = mysql.connector.connect(**config)
-    cursor = cnx.cursor()
     insertion = ('''
         INSERT INTO `testing sites`(test_site_number, test_site_name) VALUES
         (0, %s);
         ''')
     cursor.execute(insertion, (test_site_name,))
     cnx.commit()
-    cursor.close()
-    cnx.close()
     return 'insert into testing sites (?, %s) successfully' % (test_site_name,)
 
 @app.route('/update3') #delete a test site
@@ -78,16 +97,12 @@ def update3():
     test_site_name = request.args.get('test_site_name', '')
     if not test_site_name:
         return render_template('form.html', t1 = 'test_site_name')
-    cnx = mysql.connector.connect(**config)
-    cursor = cnx.cursor()
     deletion = ('''
         DELETE FROM `testing sites`
         WHERE test_site_name = %s
         ''')
     cursor.execute(deletion, (test_site_name,))
     cnx.commit()
-    cursor.close()
-    cnx.close()
     return 'delete from testing sites (?, %s) successfully' % (test_site_name,)
 
 @app.route('/update4') #add a person
@@ -99,9 +114,6 @@ def update4():
         return render_template('form.html', t1 = 'ID_number', t2 = 'person_name', t3 = 'advisor_name')
     ID_number = int(ID_number)
 
-    cnx = mysql.connector.connect(**config)
-    cursor = cnx.cursor()
-    ret = None
     query = ('''
         SELECT COUNT(*) FROM person
         WHERE ID_number = %s
@@ -109,22 +121,11 @@ def update4():
     cursor.execute(query, (ID_number,))
     for x, in cursor:
         if x > 0:
-            ret = 'person with this ID_number already exists!!!'
+            return 'person with this ID_number already exists!!!'
     if advisor_name != 'NULL':
-        query = ('''
-            SELECT ID_number FROM person
-            WHERE person_name = %s
-            ''')
-        cursor.execute(query, (advisor_name,))
-        advisor = None
-        for x, in cursor:
-            advisor = x
+        advisor = person_name2ID_number(advisor_name)
         if advisor is None:
-            ret = 'cannot find this advisor!!!'
-    if ret:
-        cursor.close()
-        cnx.close()
-        return ret
+            return 'cannot find this advisor'
     
     if advisor_name != 'NULL':
         insertion = ('''
@@ -139,25 +140,39 @@ def update4():
             ''')
         cursor.execute(insertion, (ID_number, person_name))
     cnx.commit()
-    cursor.close()
-    cnx.close()
     return 'insert into person (%s, %s, ?) successfully' % (ID_number, person_name)
+
+@app.route('/update5') #add a travel record
+def update5():
+    traveler_name = request.args.get('traveler_name', '')
+    travel_location_name = request.args.get('travel_location_name', '')
+    travel_date = request.args.get('travel_date', '')
+    if not traveler_name or not travel_location_name or not travel_date:
+        return render_template('form.html', t1 = 'traveler_name', t2 = 'travel_location_name', t3 = 'travel_date')
+    traveler = person_name2ID_number(traveler_name)
+    if traveler is None:
+        return 'cannot find this traveler'
+    travel_location = location_name2location_number(travel_location_name)
+    if travel_location is None:
+        return 'cannot find this travel_location'
+    insertion = ('''
+        INSERT INTO `travel record`(travel_number, traveler, travel_location, travel_date) VALUES
+        (0, %s, %s, %s);
+        ''')
+    cursor.execute(insertion, (traveler, travel_location, travel_date))
+    cnx.commit()
+    return 'insert into travel record (?, %d, %d, %s) successfully' % (traveler, travel_location, travel_date)
 
 @app.route('/query1') #query the risk level of a location
 def query1():
     location_name = request.args.get('location_name', '')
     if not location_name:
         return render_template('form.html', t1 = 'location_name')
-    cnx = mysql.connector.connect(**config)
-    cursor = cnx.cursor()
     query = ('''
         SELECT risk_level FROM location
         WHERE `location_name` = %s
         ''')
     cursor.execute(query, (location_name,))
-    res = 'The queried location cannot be found!!!'
     for risk_level, in cursor:
-        res = 'The risk level of {} is {}'.format(location_name, risk_level)
-    cursor.close()
-    cnx.close()
-    return res
+        return 'The risk level of {} is {}'.format(location_name, risk_level)
+    return 'The queried location cannot be found!!!'

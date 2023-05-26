@@ -22,8 +22,26 @@
 {% else %}
   
 {% endif %}
+
+{% if t4 %}
+  {{t4}}:
+  <input type='text' name={{t4}} >
+{% else %}
+  
+{% endif %}
 <input type="submit" value="Submit">
+<br>
+{{'Hint:'}}
+<br>
 {{ 'If there is none, fill in NULL'}}
+<br>
+{{ 'for test result: fill in Positive or Negative '}}
+<br>
+{{ 'DATE values format: YYYY-MM-DD'}}
+<br>
+{{ 'DATETIME values format: YYYY-MM-DD hh:mm:ss'}}
+<br>
+{{ 'for risk level: fill in low, medium or high  '}}
 </form>
 </body>
 </html>

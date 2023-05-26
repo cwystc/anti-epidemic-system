@@ -24,10 +24,10 @@ def person_name2ID_number(person_name):
         WHERE person_name = %s
         ''')
     cursor.execute(query, (person_name,))
-    ID_number = None
+    res = None
     for x, in cursor:
-        ID_number = x
-    return ID_number
+        res = x
+    return res
 
 def location_name2location_number(location_name):
     query = ('''
@@ -35,10 +35,21 @@ def location_name2location_number(location_name):
         WHERE location_name = %s
         ''')
     cursor.execute(query, (location_name,))
-    ID_number = None
+    res = None
     for x, in cursor:
-        ID_number = x
-    return ID_number
+        res = x
+    return res
+
+def test_site_name2test_site_number(test_site_name):
+    query = ('''
+        SELECT test_site_number FROM `testing sites`
+        WHERE test_site_name = %s
+        ''')
+    cursor.execute(query, (test_site_name,))
+    res = None
+    for x, in cursor:
+        res = x
+    return res
 
 @app.route('/') #index page
 def index():
@@ -53,6 +64,8 @@ def index():
     <a href="/update4"> add a person </a>
     <br>
     <a href="/update5"> add a travel record </a>
+    <br>
+    <a href="/update6"> add a test record </a>
     <br>
     <a href="/query1"> query the risk level of a location </a>
     ''')
@@ -162,6 +175,29 @@ def update5():
     cursor.execute(insertion, (traveler, travel_location, travel_date))
     cnx.commit()
     return 'insert into travel record (?, %d, %d, %s) successfully' % (traveler, travel_location, travel_date)
+
+@app.route('/update6') #add a test record
+def update6():
+    test_result = request.args.get('test_result', '')
+    test_datetime = request.args.get('test_datetime', '')
+    tested_person_name = request.args.get('tested_person_name', '')
+    test_site_name = request.args.get('test_site_name', '')
+    if test_result != 'Positive' and test_result != 'Negative' or not test_datetime or not tested_person_name or not test_site_name:
+        return render_template('form.html', t1 = 'test_result', t2 = 'test_datetime', t3 = 'tested_person_name', t4 = 'test_site_name')
+    test_result = str(int(test_result == 'Positive'))
+    tested_person = person_name2ID_number(tested_person_name)
+    if tested_person is None:
+        return 'cannot find this tested_person'
+    test_site = test_site_name2test_site_number(test_site_name)
+    if test_site is None:
+        return 'cannot find this test_site'
+    insertion = ('''
+        INSERT INTO `test record`(test_number, test_result, test_datetime, tested_person, test_site) VALUES
+        (0, b%s, %s, %s, %s);
+        ''')
+    cursor.execute(insertion, (test_result, test_datetime, tested_person, test_site))
+    cnx.commit()
+    return 'insert into test record (?, b\'%s\', %s, %d, %d) successfully' % (test_result, test_datetime, tested_person, test_site)
 
 @app.route('/query1') #query the risk level of a location
 def query1():

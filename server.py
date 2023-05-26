@@ -70,6 +70,8 @@ def index():
     <a href="/query1"> query the risk level of a location </a>
     <br>
     <a href="/query2"> query the locations a person has been to between date A and date B </a>
+    <br>
+    <a href="/query3"> query all the persons that have been to a particular location and the dates </a>
     ''')
 
 @app.route('/update1') #add/update a location (and its risk level)
@@ -231,6 +233,24 @@ def query2():
     ret = ''
     for location_name, in cursor:
         ret += location_name + '\n<br>\n'
+    if not ret:
+        return 'None'
+    return ret
+
+@app.route('/query3') #query all the persons that have been to a particular location and the dates
+def query3():
+    location_name = request.args.get('location_name', '')
+    if not location_name:
+        return render_template('form.html', t1 = 'location_name')
+    location_number = location_name2location_number(location_name)
+    query = ('''
+        SELECT B.person_name, A.travel_date FROM `travel record` as A, person as B
+        WHERE A.traveler = B.ID_number and A.travel_location = %s
+        ''')
+    cursor.execute(query, (location_number,))
+    ret = ''
+    for traveler_name, travel_date in cursor:
+        ret += traveler_name + ' ' + str(travel_date) + '\n<br>\n'
     if not ret:
         return 'None'
     return ret

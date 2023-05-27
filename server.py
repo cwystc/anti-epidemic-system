@@ -72,6 +72,8 @@ def index():
     <a href="/query2"> query the locations a person has been to between date A and date B </a>
     <br>
     <a href="/query3"> query all the persons that have been to a particular location and the dates </a>
+    <br>
+    <a href="/query4"> query all the test records of a person </a>
     ''')
 
 @app.route('/update1') #add/update a location (and its risk level)
@@ -225,6 +227,8 @@ def query2():
     if not person_name or not dateA or not dateB:
         return render_template('form.html', t1 = 'person_name', t2 = 'dateA', t3 = 'dateB')
     ID_number = person_name2ID_number(person_name)
+    if ID_number is None:
+        return 'cannot find this person!!!'
     query = ('''
         SELECT DISTINCT B.location_name FROM `travel record` as A, location as B
         WHERE (A.travel_date BETWEEN %s and %s) and A.travel_location = B.location_number and A.traveler = %s
@@ -243,6 +247,8 @@ def query3():
     if not location_name:
         return render_template('form.html', t1 = 'location_name')
     location_number = location_name2location_number(location_name)
+    if location_number is None:
+        return 'cannot find this location!!!'
     query = ('''
         SELECT B.person_name, A.travel_date FROM `travel record` as A, person as B
         WHERE A.traveler = B.ID_number and A.travel_location = %s
@@ -251,6 +257,27 @@ def query3():
     ret = ''
     for traveler_name, travel_date in cursor:
         ret += traveler_name + ' ' + str(travel_date) + '\n<br>\n'
+    if not ret:
+        return 'None'
+    return ret
+
+@app.route('/query4') #query all the test records of a person
+def query4():
+    tested_person_name = request.args.get('tested_person_name', '')
+    if not tested_person_name:
+        return render_template('form.html', t1 = 'tested_person_name')
+    tested_person = person_name2ID_number(tested_person_name)
+    if tested_person is None:
+        return 'cannot find this person!!!'
+    query = ('''
+        SELECT A.test_result, A.test_datetime, B.test_site_name FROM `test record` as A, `testing sites` as B
+        WHERE A.tested_person = %s and A.test_site = B.test_site_number
+        ''')
+    cursor.execute(query, (tested_person,))
+    dict = {'0': 'Negative', '1': 'Positive'}
+    ret = ''
+    for test_result, test_datetime, test_site_name in cursor:
+        ret += dict[str(test_result)] + ' ' + str(test_datetime) + ' ' + test_site_name + '\n<br>\n'
     if not ret:
         return 'None'
     return ret

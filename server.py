@@ -77,6 +77,16 @@ def ID_number2person_name(ID_number):
 def index():
     return ('''
     <h1>Welcome to the anti-epidemic system! </h1>
+    <a href="/update"> update
+    <br>
+    <a href="query"> query
+    <br>
+    ''')
+
+@app.route('/update')
+def update():
+    return ('''
+    <h1>Welcome to the anti-epidemic system! </h1>
     <a href="/update1"> add/update a location (and its risk level)</a>
     <br>
     <a href="/update2"> add a new test site </a>
@@ -89,6 +99,12 @@ def index():
     <br>
     <a href="/update6"> add a test record </a>
     <br>
+    ''')
+
+@app.route('/query')
+def query():
+    return ('''
+    <h1>Welcome to the anti-epidemic system! </h1>
     <a href="/query1"> query the risk level of a location </a>
     <br>
     <a href="/query2"> query the locations a person has been to between date A and date B </a>
@@ -117,6 +133,9 @@ def update1():
         return render_template('form.html', t1 = 'location_name', t2 = 'risk_level')
     if risk_level != 'low' and risk_level != 'medium' and risk_level != 'high':
         return 'the risk level of a location must be low, medium or high'
+    for c in location_name:
+        if (c<'A') or (c>'Z' and c<'a') or (c>'z'):
+            return 'the name should only contain uppercase or lowercase letters'
     deletion = ('''
         DELETE FROM location
         WHERE location_name = %s
@@ -135,6 +154,9 @@ def update2():
     test_site_name = request.args.get('test_site_name', '')
     if not test_site_name:
         return render_template('form.html', t1 = 'test_site_name')
+    for c in test_site_name:
+        if (c<'A') or (c>'Z' and c<'a') or (c>'z'):
+            return 'the name should only contain uppercase or lowercase letters'
     insertion = ('''
         INSERT INTO `testing sites`(test_site_number, test_site_name) VALUES
         (0, %s);
@@ -148,6 +170,9 @@ def update3():
     test_site_name = request.args.get('test_site_name', '')
     if not test_site_name:
         return render_template('form.html', t1 = 'test_site_name')
+    for c in test_site_name:
+        if (c<'A') or (c>'Z' and c<'a') or (c>'z'):
+            return 'the name should only contain uppercase or lowercase letters'
     deletion = ('''
         DELETE FROM `testing sites`
         WHERE test_site_name = %s
@@ -163,6 +188,12 @@ def update4():
     advisor_name = request.args.get('advisor_name', '')
     if not ID_number.isdigit() or not person_name:
         return render_template('form.html', t1 = 'ID_number', t2 = 'person_name', t3 = 'advisor_name')
+    for c in person_name:
+        if (c<'A') or (c>'Z' and c<'a') or (c>'z'):
+            return 'the name should only contain uppercase or lowercase letters'
+    for c in advisor_name:
+        if (c<'A') or (c>'Z' and c<'a') or (c>'z'):
+            return 'the name should only contain uppercase or lowercase letters'
     ID_number = int(ID_number)
 
     query = ('''
@@ -200,6 +231,12 @@ def update5():
     travel_date = request.args.get('travel_date', '')
     if not traveler_name or not travel_location_name or not travel_date:
         return render_template('form.html', t1 = 'traveler_name', t2 = 'travel_location_name', t3 = 'travel_date')
+    for c in traveler_name:
+        if (c<'A') or (c>'Z' and c<'a') or (c>'z'):
+            return 'the name should only contain uppercase or lowercase letters'
+    for c in travel_location_name:
+        if (c<'A') or (c>'Z' and c<'a') or (c>'z'):
+            return 'the name should only contain uppercase or lowercase letters'
     traveler = person_name2ID_number(traveler_name)
     if traveler is None:
         return 'cannot find this traveler'
@@ -222,6 +259,12 @@ def update6():
     test_site_name = request.args.get('test_site_name', '')
     if test_result != 'Positive' and test_result != 'Negative' or not test_datetime or not tested_person_name or not test_site_name:
         return render_template('form.html', t1 = 'test_result', t2 = 'test_datetime', t3 = 'tested_person_name', t4 = 'test_site_name')
+    for c in test_site_name:
+        if (c<'A') or (c>'Z' and c<'a') or (c>'z'):
+            return 'the name should only contain uppercase or lowercase letters'
+    for c in tested_person_name:
+        if (c<'A') or (c>'Z' and c<'a') or (c>'z'):
+            return 'the name should only contain uppercase or lowercase letters'
     test_result = str(int(test_result == 'Positive'))
     tested_person = person_name2ID_number(tested_person_name)
     if tested_person is None:
@@ -242,6 +285,9 @@ def query1():
     location_name = request.args.get('location_name', '')
     if not location_name:
         return render_template('form.html', t1 = 'location_name')
+    for c in location_name:
+        if (c<'A') or (c>'Z' and c<'a') or (c>'z'):
+            return 'the name should only contain uppercase or lowercase letters'
     query = ('''
         SELECT risk_level FROM location
         WHERE `location_name` = %s
@@ -258,6 +304,9 @@ def query2():
     dateB = request.args.get('dateB', '')
     if not person_name or not dateA or not dateB:
         return render_template('form.html', t1 = 'person_name', t2 = 'dateA', t3 = 'dateB')
+    for c in person_name:
+        if (c<'A') or (c>'Z' and c<'a') or (c>'z'):
+            return 'the name should only contain uppercase or lowercase letters'
     ID_number = person_name2ID_number(person_name)
     if ID_number is None:
         return 'cannot find this person!!!'
@@ -278,6 +327,9 @@ def query3():
     location_name = request.args.get('location_name', '')
     if not location_name:
         return render_template('form.html', t1 = 'location_name')
+    for c in location_name:
+        if (c<'A') or (c>'Z' and c<'a') or (c>'z'):
+            return 'the name should only contain uppercase or lowercase letters'
     location_number = location_name2location_number(location_name)
     if location_number is None:
         return 'cannot find this location!!!'
@@ -298,6 +350,9 @@ def query4():
     tested_person_name = request.args.get('tested_person_name', '')
     if not tested_person_name:
         return render_template('form.html', t1 = 'tested_person_name')
+    for c in tested_person_name:
+        if (c<'A') or (c>'Z' and c<'a') or (c>'z'):
+            return 'the name should only contain uppercase or lowercase letters'
     tested_person = person_name2ID_number(tested_person_name)
     if tested_person is None:
         return 'cannot find this person!!!'
@@ -319,6 +374,9 @@ def query5():
     person_name = request.args.get('person_name', '')
     if not person_name:
         return render_template('form.html', t1 = 'person_name')
+    for c in person_name:
+        if (c<'A') or (c>'Z' and c<'a') or (c>'z'):
+            return 'the name should only contain uppercase or lowercase letters'
     person_id=person_name2ID_number(person_name)
     query = ('''
         SELECT test_result,test_datetime,test_site FROM `test record`
@@ -341,6 +399,9 @@ def query6():
     test_site_name = request.args.get('test_site_name', '')
     if not test_site_name:
         return render_template('form.html', t1 = 'test_site_name')
+    for c in test_site_name:
+        if (c<'A') or (c>'Z' and c<'a') or (c>'z'):
+            return 'the name should only contain uppercase or lowercase letters'
     test_site_number=test_site_name2test_site_number(test_site_name)
     query = ('''
         SELECT test_datetime,tested_person FROM `test record`
@@ -419,6 +480,9 @@ def query9():
     advisor_name=request.args.get('advisor_name','')
     if not test_date or not advisor_name:
         return render_template('form.html', t1 = 'test_date',t2='advisor_name')
+    for c in advisor_name:
+        if (c<'A') or (c>'Z' and c<'a') or (c>'z'):
+            return 'the name should only contain uppercase or lowercase letters'
     advisor_id=person_name2ID_number(advisor_name)
     query = ('''
         SELECT tested_person,test_site,test_datetime FROM `test record`

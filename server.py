@@ -379,18 +379,15 @@ def query5():
             return 'the name should only contain uppercase or lowercase letters'
     person_id=person_name2ID_number(person_name)
     query = ('''
-        SELECT test_result,test_datetime,test_site FROM `test record`
-        WHERE `tested_person` = %s and test_datetime>=all(
+        SELECT test_datetime,test_site FROM `test record`
+        WHERE `tested_person` = %s and test_result=1 and test_datetime>=all(
         SELECT test_datetime FROM `test record`
-        WHERE `tested_person` = %s
+        WHERE `tested_person` = %s and test_result=1
         )
         ''')
     cursor.execute(query, (person_id,person_id))
-    for test_result,test_datetime,test_site in cursor:
-        if test_result:
-            return '{} tested positive most recently in test site {} on {}'.format(person_name, test_site_number2test_site_name(test_site),test_datetime)
-        else:
-            return '{} tested negative most recently in test site {} on {}'.format(person_name, test_site_number2test_site_name(test_site),test_datetime)
+    for test_datetime,test_site in cursor:
+        return '{} tested positive most recently in test site {} on {}'.format(person_name, test_site_number2test_site_name(test_site),test_datetime)
     return 'The queried test record cannot be found!!!'
 
 
